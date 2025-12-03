@@ -6,6 +6,8 @@ from typing import List
 from fastapi.middleware.cors import CORSMiddleware
 
 from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi.responses import HTMLResponse, FileResponse
+from fastapi.staticfiles import StaticFiles
 
 from utils import load_model_and_classes, predict_from_bytes
 from clients import OpenFoodFactsClient, NutritionProvider
@@ -43,6 +45,9 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Food Classifier + Nutrition API", lifespan=lifespan)
 
+# Mount static files
+app.mount("/static", StaticFiles(directory="Frontend-NutriFood"), name="static")
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # Permite a cualquier página web conectarse
@@ -51,9 +56,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.get("/")
+@app.get("/", response_class=HTMLResponse)
 def root():
-    return {"message": "Food Classifier + Nutrition API", "status": "running"}
+    with open("Frontend-NutriFood/index.html", "r", encoding="utf-8") as f:
+        return f.read()
 
 
 @app.get("/health")
